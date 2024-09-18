@@ -1,0 +1,111 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Client</title>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/signalr.js/2.4.3/jquery.signalR.min.js"
+      integrity="sha512-GA74ohU6Jbe86KnYUjZvXq73wkBbhxNJ0vWBrZ/fU8cO+pAqaw6zi833NAnzAgRf7YSaqa9QB4TX3VLns/J9uw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body class="bg-gray-100 h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md w-80">
+      <h1 class="text-2xl font-bold mb-4 text-center">SignalR Client</h1>
+
+      <div class="mb-4 flex items-center justify-between">
+        <span class="font-semibold">Status:</span>
+        <span
+          id="connectionStatus"
+          class="px-2 py-1 rounded-full text-sm font-semibold bg-red-500 text-white"
+          >Disconnected</span
+        >
+      </div>
+
+      <button
+        id="connectButton"
+        class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+      >
+        Connect
+      </button>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+        let hubConnection;
+
+        function connectToSignalRHub() {
+          if (
+            hubConnection &&
+            hubConnection.state === $.signalR.connectionState.connected
+          ) {
+            console.log("Already connected!");
+            return;
+          }
+
+          hubConnection = $.hubConnection("http://localhost:46962");
+
+          var hubProxy = hubConnection.createHubProxy("demoHub");
+
+          hubProxy.on("hubMessage", function (data) {
+            console.log("data:", data);
+          });
+
+          hubConnection
+            .start()
+            .done(function () {
+              updateConnectionStatus(true);
+              console.log("Connected to SignalR hub");
+            })
+            .fail(function () {
+              updateConnectionStatus(false);
+              console.log("Could not connect!");
+            });
+
+          hubConnection.disconnected(function () {
+            updateConnectionStatus(false);
+            console.log("Disconnected from SignalR hub");
+          });
+        }
+
+        function updateConnectionStatus(isConnected) {
+          const $status = $("#connectionStatus");
+          const $button = $("#connectButton");
+
+          if (isConnected) {
+            $status
+              .text("Connected")
+              .removeClass("bg-red-500")
+              .addClass("bg-green-500");
+            $button
+              .text("Disconnect")
+              .off("click")
+              .on("click", disconnectFromSignalRHub);
+          } else {
+            $status
+              .text("Disconnected")
+              .removeClass("bg-green-500")
+              .addClass("bg-red-500");
+            $button
+              .text("Connect")
+              .off("click")
+              .on("click", connectToSignalRHub);
+          }
+        }
+
+        function disconnectFromSignalRHub() {
+          if (hubConnection) {
+            hubConnection.stop();
+          }
+        }
+
+        // Initial setup
+        $("#connectButton").on("click", connectToSignalRHub);
+      });
+    </script>
+  </body>
+</html>

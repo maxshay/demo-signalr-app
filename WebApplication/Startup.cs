@@ -14,18 +14,8 @@ namespace WebApplication
         public void Configuration(IAppBuilder app)
         {
             app.UseCors(CorsOptions.AllowAll);
-            ConfigureAuth(app);
 
-            app.Map("/signalr", map =>
-            {
-                map.UseCors(CorsOptions.AllowAll);
-                var hubConfiguration = new HubConfiguration();
-                app.MapSignalR();
-                app.MapSignalR<DemoPersistentConnection>("/demo");
-                app.MapSignalR<AuthorizationPersistentConnection>("/authPersistConnection");
-                map.MapSignalR(hubConfiguration);
-            });
-           /*     
+            ConfigureAuth(app);
             app.MapSignalR();
             app.MapSignalR<DemoPersistentConnection>("/Connections/DemoPersistentConnection");
             app.MapSignalR<AuthorizationPersistentConnection>("/Connections/AuthorizationPersistentConnection");
@@ -38,7 +28,7 @@ namespace WebApplication
                 };
 
                 map.MapSignalR(hubConfiguration);
-            });*/
+            });
         }
     }
 }
